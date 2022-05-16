@@ -182,12 +182,6 @@ func lexLeftBracket(l *lexer) stateFn {
 	return lexArray
 }
 
-func lexLeftDoubleQuote(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemDoubleQuote)
-	return lexString
-}
-
 // lexQuote scans a quoted string.
 // TODO 先不考虑字符串里有引号的情况
 func lexQuote(l *lexer) stateFn {
@@ -271,6 +265,33 @@ func lexInside(l *lexer) stateFn {
 	return lexInside
 }
 
+func lexTrue(l *lexer) stateFn {
+	l.forward(len("true"))
+	l.emit(itemTrue)
+	if l.inObjectDepth > 0 || l.inArrayDepth > 0 {
+		return lexInside
+	}
+	return lexValue
+}
+
+func lexFalse(l *lexer) stateFn {
+	l.forward(len("false"))
+	l.emit(itemFalse)
+	if l.inObjectDepth > 0 || l.inArrayDepth > 0 {
+		return lexInside
+	}
+	return lexValue
+}
+
+func lexNull(l *lexer) stateFn {
+	l.forward(len("null"))
+	l.emit(itemNull)
+	if l.inObjectDepth > 0 || l.inArrayDepth > 0 {
+		return lexInside
+	}
+	return lexValue
+}
+
 func lexObject(l *lexer) stateFn {
 	l.pos += leftTrimLength(l.input[l.pos:])
 	l.ignore()
@@ -321,34 +342,6 @@ func lexColon(l *lexer) stateFn {
 }
 
 func lexArray(l *lexer) stateFn {
-	return nil
-}
-
-func lexString(l *lexer) stateFn {
-	return nil
-}
-
-// true
-func lexTrue(l *lexer) stateFn {
-	l.pos += len("true")
-	l.emit(itemTrue)
-
-	return nil
-}
-
-// false
-func lexFalse(l *lexer) stateFn {
-	l.pos += len("false")
-	l.emit(itemTrue)
-
-	return nil
-}
-
-// null
-func lexNull(l *lexer) stateFn {
-	l.pos += len("null")
-	l.emit(itemNull)
-
 	return nil
 }
 
