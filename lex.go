@@ -152,34 +152,16 @@ func lexValue(l *lexer) stateFn {
 	default:
 		l.backup()
 		if strings.HasPrefix(l.input[l.pos:], "true") {
-			l.forward(4)
-			l.emit(itemTrue)
-			return lexValue
+			return lexTrue
 		} else if strings.HasPrefix(l.input[l.pos:], "false") {
-			l.forward(5)
-			l.emit(itemFalse)
-			return lexValue
+			return lexFalse
 		} else if strings.HasPrefix(l.input[l.pos:], "null") {
-			l.forward(4)
-			l.emit(itemNull)
-			return lexValue
+			return lexNull
 		} else {
 			// TODO 单个数字
 			return l.errorf("unexpected character %#U", r)
 		}
 	}
-}
-
-func lexLeftBrace(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemLeftBrace)
-	return lexObject
-}
-
-func lexLeftBracket(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemLeftBracket)
-	return lexArray
 }
 
 // lexQuote scans a quoted string.
@@ -246,17 +228,11 @@ func lexInside(l *lexer) stateFn {
 	default:
 		l.backup()
 		if strings.HasPrefix(l.input[l.pos:], "true") {
-			l.forward(4)
-			l.emit(itemTrue)
-			return lexInside
+			return lexTrue
 		} else if strings.HasPrefix(l.input[l.pos:], "false") {
-			l.forward(5)
-			l.emit(itemFalse)
-			return lexInside
+			return lexFalse
 		} else if strings.HasPrefix(l.input[l.pos:], "null") {
-			l.forward(4)
-			l.emit(itemNull)
-			return lexInside
+			return lexNull
 		} else {
 			// TODO 单个数字
 			return l.errorf("unexpected character %#U", r)
@@ -292,65 +268,9 @@ func lexNull(l *lexer) stateFn {
 	return lexValue
 }
 
-func lexObject(l *lexer) stateFn {
-	l.pos += leftTrimLength(l.input[l.pos:])
-	l.ignore()
-
-	if strings.HasPrefix(l.input[l.pos:], rightBrace) {
-		return lexRightBrace
-	}
-	return lexObjectKey
-}
-
-func lexRightBrace(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemRightBrace)
-	// TODO
-	return nil
-}
-
-func lexObjectKey(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemDoubleQuote)
-
-	return lexAfterObjectKey
-}
-
-func lexAfterObjectKey(l *lexer) stateFn {
-	r := l.next()
-	switch r {
-	case eof:
-		return l.errorf("lack of object value")
-	case colon:
-		l.emit(itemColon)
-		return lexValue
-	}
-
-	// todo
-
-	return nil
-}
-
-func lexColon(l *lexer) stateFn {
-	l.pos += 1
-	l.emit(itemColon)
-
-	l.pos += leftTrimLength(l.input[l.pos:])
-	l.ignore()
-
-	return lexValue
-}
-
-func lexArray(l *lexer) stateFn {
-	return nil
-}
 
 // 整数，小数，科学计数法
 func lexNumber(l *lexer) stateFn {
-	return nil
-}
-
-func lexRightBracket(l *lexer) stateFn {
 	return nil
 }
 
