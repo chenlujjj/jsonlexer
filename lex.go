@@ -56,6 +56,7 @@ type lexer struct {
 	items []item // slice or channel ?
 
 	inObjectDepth int // 记录在object中的深度，据此来判断是否应该结束json
+	inArrayDepth  int
 }
 
 func (l *lexer) run() {
@@ -142,6 +143,7 @@ func lexValue(l *lexer) stateFn {
 		return lexInside
 	case r == '[':
 		l.emit(itemLeftBracket)
+		l.inArrayDepth += 1
 		return lexInside
 	case r == eof:
 		return nil
@@ -162,7 +164,7 @@ func lexValue(l *lexer) stateFn {
 			l.emit(itemNull)
 			return lexValue
 		} else {
-			// TODO 单个数字，bool， null
+			// TODO 单个数字
 			return l.errorf("unexpected character %#U", r)
 		}
 	}
@@ -199,7 +201,7 @@ Loop:
 		}
 	}
 	l.emit(itemString)
-	if l.inObjectDepth > 0 {
+	if l.inObjectDepth > 0 || l.inArrayDepth > 0 {
 		return lexInside
 	}
 	return lexValue
@@ -224,7 +226,7 @@ func lexInside(l *lexer) stateFn {
 	case r == '}':
 		l.emit(itemRightBrace)
 		l.inObjectDepth -= 1
-		if l.inObjectDepth == 0 {
+		if l.inObjectDepth == 0 && l.inArrayDepth == 0 {
 			// 结束
 			return nil
 		} else if l.inObjectDepth < 0 {
@@ -234,8 +236,37 @@ func lexInside(l *lexer) stateFn {
 		l.emit(itemLeftBrace)
 		l.inObjectDepth += 1
 		return lexInside
+	case r == '[':
+		l.emit(itemLeftBracket)
+		l.inArrayDepth += 1
+		return lexInside
+	case r == ']':
+		l.emit(itemRightBracket)
+		l.inArrayDepth -= 1
+		if l.inArrayDepth == 0 && l.inObjectDepth == 0 {
+			// 结束
+			return nil
+		} else if l.inArrayDepth < 0 {
+			return l.errorf("unexpected right bracket")
+		}
 	default:
-		return l.errorf("unexpected character %#U", r)
+		l.backup()
+		if strings.HasPrefix(l.input[l.pos:], "true") {
+			l.forward(4)
+			l.emit(itemTrue)
+			return lexInside
+		} else if strings.HasPrefix(l.input[l.pos:], "false") {
+			l.forward(5)
+			l.emit(itemFalse)
+			return lexInside
+		} else if strings.HasPrefix(l.input[l.pos:], "null") {
+			l.forward(4)
+			l.emit(itemNull)
+			return lexInside
+		} else {
+			// TODO 单个数字
+			return l.errorf("unexpected character %#U", r)
+		}
 	}
 	return lexInside
 }
