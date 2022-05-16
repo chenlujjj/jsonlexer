@@ -32,6 +32,35 @@ var testcases = []testcase{
 		input: "null",
 		items: []item{{itemNull, "null"}},
 	},
+	{
+		input: "3",
+		items: []item{{itemNumber, "3"}},
+	},
+	{
+		input: "-3",
+		items: []item{{itemNumber, "-3"}},
+	},
+	{
+		input: "3e10",
+		items: []item{{itemNumber, "3e10"}},
+	},
+	{
+		input: "-3e10",
+		items: []item{{itemNumber, "-3e10"}},
+	},
+	{
+		input: "-3e+2",
+		items: []item{{itemNumber, "-3e+2"}},
+	},
+	{
+		input: "-3e-02",
+		items: []item{{itemNumber, "-3e-02"}},
+	},
+
+	// {
+	// 	input: "3.14",
+	// 	items: []item{{itemNumber, "3"}},
+	// },
 
 	{
 		input: "{}",
@@ -54,16 +83,16 @@ var testcases = []testcase{
 		items: []item{{itemLeftBrace, "{"}, {itemString, `"foo"`}, {itemColon, ":"}, {itemString, `"bar"`}, {itemComma, ","}, {itemString, `"baz"`}, {itemColon, ":"}, {itemString, `"qux"`}, {itemRightBrace, "}"}},
 	},
 	{
-		input: `{"foo":  {"bar": "baz"}  }`,
-		items: []item{{itemLeftBrace, "{"}, {itemString, `"foo"`}, {itemColon, ":"}, {itemLeftBrace, "{"}, {itemString, `"bar"`}, {itemColon, ":"}, {itemString, `"baz"`}, {itemRightBrace, "}"}, {itemRightBrace, "}"}},
+		input: `{"foo":  {"bar": 3e+03}  }`,
+		items: []item{{itemLeftBrace, "{"}, {itemString, `"foo"`}, {itemColon, ":"}, {itemLeftBrace, "{"}, {itemString, `"bar"`}, {itemColon, ":"}, {itemNumber, "3e+03"}, {itemRightBrace, "}"}, {itemRightBrace, "}"}},
 	},
 	{
-		input: `["foo", true, false, null]`,
-		items: []item{{itemLeftBracket, "["}, {itemString, `"foo"`}, {itemComma, ","}, {itemTrue, "true"}, {itemComma, ","}, {itemFalse, "false"}, {itemComma, ","}, {itemNull, "null"},{itemRightBracket, "]"}},
+		input: `["foo", true, false, null, 3]`,
+		items: []item{{itemLeftBracket, "["}, {itemString, `"foo"`}, {itemComma, ","}, {itemTrue, "true"}, {itemComma, ","}, {itemFalse, "false"}, {itemComma, ","}, {itemNull, "null"}, {itemComma, ","}, {itemNumber, "3"}, {itemRightBracket, "]"}},
 	},
 	{
 		input: `{"foo" :  ["bar", true]}`,
-		items: []item{{itemLeftBrace, "{"}, {itemString, `"foo"`}, {itemColon, ":"}, {itemLeftBracket, "["}, {itemString, `"bar"`}, {itemComma, ","}, {itemTrue, "true"},{itemRightBracket, "]"}, {itemRightBrace, "}"}},
+		items: []item{{itemLeftBrace, "{"}, {itemString, `"foo"`}, {itemColon, ":"}, {itemLeftBracket, "["}, {itemString, `"bar"`}, {itemComma, ","}, {itemTrue, "true"}, {itemRightBracket, "]"}, {itemRightBrace, "}"}},
 	},
 	{
 		input: `["foo", {"bar": true}]`,

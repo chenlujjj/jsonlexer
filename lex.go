@@ -158,8 +158,7 @@ func lexValue(l *lexer) stateFn {
 		} else if strings.HasPrefix(l.input[l.pos:], "null") {
 			return lexNull
 		} else {
-			// TODO 单个数字
-			return l.errorf("unexpected character %#U", r)
+			return lexNumber
 		}
 	}
 }
@@ -234,8 +233,7 @@ func lexInside(l *lexer) stateFn {
 		} else if strings.HasPrefix(l.input[l.pos:], "null") {
 			return lexNull
 		} else {
-			// TODO 单个数字
-			return l.errorf("unexpected character %#U", r)
+			return lexNumber
 		}
 	}
 	return lexInside
@@ -268,12 +266,40 @@ func lexNull(l *lexer) stateFn {
 	return lexValue
 }
 
-
 // 整数，小数，科学计数法
 func lexNumber(l *lexer) stateFn {
-	return nil
+	// 允许负数
+	l.accept("-")
+	// TODO 先不考虑小数
+	digits := "0123456789"
+	l.acceptRun(digits)
+
+	if l.accept("eE") {
+		l.accept("+-")
+		l.acceptRun(digits)
+	}
+	l.emit(itemNumber)
+
+	if l.inObjectDepth > 0 || l.inArrayDepth > 0 {
+		return lexInside
+	}
+	return lexValue
 }
 
 func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\r' || r == '\n'
+}
+
+func (l *lexer) accept(valid string) bool {
+	if strings.ContainsRune(valid, l.next()) {
+		return true
+	}
+	l.backup()
+	return false
+}
+
+func (l *lexer) acceptRun(valid string) {
+	for strings.ContainsRune(valid, l.next()) {
+	}
+	l.backup()
 }
